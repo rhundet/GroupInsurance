@@ -103,8 +103,8 @@ func (t *GroupPolicy) Query(stub shim.ChaincodeStubInterface, function string, a
 	fmt.Println("query is running " + function)
 
 	// Handle different functions
-	if function == "findPolicyByEmployeeId" {											//read a variable
-		return t.findPolicyByEmployeeId(stub, args)
+	if function == "findPolicyByPolicyNo" {											//read a variable
+		return t.findPolicyByPolicyNo(stub, args)
 	} else if function =="findPolicyByEmployer" {
 		return t.findPolicyByEmployer(stub, args)
 	} else if function =="findPolicyByDateRange" {
