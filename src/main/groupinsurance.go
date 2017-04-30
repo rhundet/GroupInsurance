@@ -4,14 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-//	"encoding/json"
+	"encoding/json"
 )
 
 type GroupPolicy struct {
 	ObjectType string `json:"docType"`
 	PolicyNo string `json:"policyNo"`
 	CustomerId string `json:"customerId"`
-	Insured Insured `json:"insured"`
+	//Insured Insured `json:"insured"`
 	Coverages []Coverage `json:"coverages"`
 	TransactionType string `json:"transactionType"`
 	TransactionLabel string `json:"transactionLabel"`
@@ -104,13 +104,13 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 
 	fmt.Println("runnin write()")
 	
-//	gp:= new(GroupPolicy)
-//	gp.ObjectType = "GP"
-//	gp.PolicyNo = args[0]
-//	gp.CustomerId = args[1]
-//	gp.TransactionType = args[2]
-//	gp.TransactionLabel = args[3]
-//	gp.TransactionDetails = args[4]
+	gp:= new(GroupPolicy)
+	gp.ObjectType = "GP"
+	gp.PolicyNo = args[0]
+	gp.CustomerId = args[1]
+	gp.TransactionType = args[2]
+	gp.TransactionLabel = args[3]
+	gp.TransactionDetails = args[4]
 //	
 //	insured:= new(Insured)
 //	insured.ObjectType="INS"
@@ -125,11 +125,11 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	
 	//gp.Insured = insured
 
-	//jsonAsBytes, _ := json.Marshal(gp) 
+	jsonAsBytes, _ := json.Marshal(gp) 
 	
 	//fmt.Println("jsonAsBytes >> " + jsonAsBytes)
 	
-	err = stub.PutState(args[0], []byte(args[0]))
+	err = stub.PutState(args[0], jsonAsBytes)
 	 
 	if err != nil {
         return nil, err
