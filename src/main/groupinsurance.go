@@ -130,7 +130,7 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	//fmt.Println("jsonAsBytes >> " + jsonAsBytes)
 	
 	err = stub.PutState(args[0], []byte(args[0]))
-	
+	 
 	if err != nil {
         return nil, err
     }
