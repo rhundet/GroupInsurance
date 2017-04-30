@@ -57,18 +57,9 @@ func (t *GroupPolicy) Init(stub shim.ChaincodeStubInterface, function string, ar
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	// Check if the table already exists, _, called blank identifier helps ignoring other returned values except for the one we are concenrned about
-	_, err := stub.GetTable("Claim")
-	
 	if err == nil {
-		// Table already exists; do not recreate
 		return nil, nil
 	}	
-	
-	if err != nil {
-		return nil, errors.New("Failed creating ApplicationTable.")
-	}
-
 	
 	if err != nil {
 		return nil, err
