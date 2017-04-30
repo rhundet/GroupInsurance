@@ -104,79 +104,31 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 
 	fmt.Println("runnin write()")
 	
+	if len(args) != 13 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 13")
+	}
+
 	gp:= new(GroupPolicy)
 	gp.ObjectType = "GP"
-	
-	if args[0] == "" {
-		return nil, errors.New("PolicyNo missing as argument 0.")
-	}
 	gp.PolicyNo = args[0]
-	
-	if args[1] == "" {
-		return nil, errors.New("CustomerId missing as argument 1.")
-	}
 	gp.CustomerId = args[1]
-	
-	if args[2] == "" {
-		return nil, errors.New("TransactionType missing as argument 2.")
-	}
 	gp.TransactionType = args[2]
-	
-	if args[3] == "" {
-		return nil, errors.New("TransactionLabel missing as argument 3.")
-	}
 	gp.TransactionLabel = args[3]
-	
-	if args[4] == "" {
-		return nil, errors.New("TransactionDetails missing as argument 4.")
-	}
 	gp.TransactionDetails = args[4]
 
 	gp.Insured.ObjectType="INS"
-	
-	if args[5] == "" {
-		return nil, errors.New("CustomerId missing as argument 5.")
-	}
 	gp.Insured.CustomerId = args[5]
-	
-	if args[6] == "" {
-		return nil, errors.New("EmployeeId missing as argument 6.")
-	}
 	gp.Insured.EmployeeId = args[6]
-	
-	if args[7] == "" {
-		return nil, errors.New("FirstName missing as argument 7.")
-	}
 	gp.Insured.FirstName = args[7]
-	
-	if args[8] == "" {
-		return nil, errors.New("LastName missing as argument 8.")
-	}
 	gp.Insured.LastName = args[8]
-	
-	if args[9] == "" {
-		return nil, errors.New("CertificateNo missing as argument 9.")
-	}
 	gp.Insured.CertificateNo = args[9]
-	
-	if args[10] == "" {
-		return nil, errors.New("Class missing as argument 10.")
-	}
 	gp.Insured.Class = args[10]
-	
-	if args[11] == "" {
-		return nil, errors.New("EmployerId missing as argument 11.")
-	}
 	gp.Insured.EmployerId = args[11]
-	
-	if args[12] == "" {
-		return nil, errors.New("EmployerName missing as argument 12.")
-	}
 	gp.Insured.EmployerName = args[12]
 	
 	jsonAsBytes, _ := json.Marshal(gp) 
 	
-	err = stub.PutState(gp.PolicyNo, jsonAsBytes) 
+	err = stub.PutState(args[0], jsonAsBytes)
 	 
 	if err != nil {
         return nil, err
