@@ -12,7 +12,7 @@ type GroupPolicy struct {
 	PolicyNo string `json:"policyNo"`
 	CustomerId string `json:"customerId"`
 	//Insured Insured `json:"insured"`
-	Coverages []Coverage `json:"coverages"`
+	//Coverages []Coverage `json:"coverages"`
 	TransactionType string `json:"transactionType"`
 	TransactionLabel string `json:"transactionLabel"`
 	TransactionDetails string `json:"transactionDetails"`
