@@ -103,6 +103,7 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	var err error
 
 	fmt.Println("runnin write()")
+	
 	gp:= new(GroupPolicy)
 	gp.ObjectType = "GP"
 	gp.PolicyNo = args[0]
@@ -125,11 +126,13 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	//gp.Insured = insured
 
 	jsonAsBytes, _ := json.Marshal(gp) 
-	err = stub.PutState(gp.PolicyNo, jsonAsBytes)
+	
+	err = stub.PutState(gp.PolicyNo, []byte(args[0]))
 	
 	if err != nil {
         return nil, err
     }
+    
     return nil, nil
 }
 
