@@ -127,10 +127,6 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	jsonAsBytes, _ := json.Marshal(gp) 
 	err = stub.PutState(gp.PolicyNo, jsonAsBytes)
 	
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number od arguments.");
-	}
-	
 	if err != nil {
         return nil, err
     }
