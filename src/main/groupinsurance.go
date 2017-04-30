@@ -50,9 +50,9 @@ type Insured struct {
 
 type Coverage struct {
 	ObjectType string `json:"docType"`
-	coverageType string `json:"coverageType"`
-	coverageLabel string `json:"coverageLabel"`
-	sumAssured string `json:"sumAssured"`
+	CoverageType string `json:"coverageType"`
+	CoverageLabel string `json:"coverageLabel"`
+	SumAssured string `json:"sumAssured"`
 }	
 
 type Dependent struct {
@@ -139,7 +139,11 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	gp.Insured.FirstName = args[7]
 	gp.Insured.LastName = args[8]
 	gp.Insured.CertificateNo = args[9]
+	
+	// assign initial class and corresponding coverages
 	gp.Insured.Class = args[10]
+	gp.Coverages = t.getCoverageByClass(gp.Insured.Class);	
+	
 	gp.Insured.EmployerId = args[11]
 	gp.Insured.EmployerName = args[12]
 	
@@ -155,18 +159,32 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 }
 
 func (t *GroupPolicy) updateClass(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, value string
+	var employeeId, newClass string
 	var err error
 	
-	fmt.Println("runnin write()")
-	key = args[0]
-	value = args[1]
-
-	err = stub.PutState(key, []byte(value))
-	
 	if len(args) != 2 {
-		return nil, errors.New("Incorrect number od arguments.");
+		return nil, errors.New("Incorrect number of arguments.");
 	}
+	
+	employeeId = args[0]
+	newClass = args[1]
+	
+	currentPolicyJson,_:= t.findPolicyByEmployeeId(stub, employeeId)
+	currentPolicy:= new(GroupPolicy);
+	json.Unmarshal(currentPolicyJson, &currentPolicy) 
+	
+	oldClass:= currentPolicy.Insured.Class
+	
+	if(oldClass!=newClass){
+		// class got updated update new class on the policy
+		currentPolicy.Insured.Class = newClass
+		
+		// update new coverages
+		currentPolicy.Coverages = t.getCoverageByClass(newClass)
+	}
+	
+	updatedJsonAsBytes, _ := json.Marshal(currentPolicy)
+	err = stub.PutState(employeeId, updatedJsonAsBytes)
 	
 	if err != nil {
         return nil, err
@@ -240,6 +258,35 @@ func (t *GroupPolicy) findPolicyByEmployeeId(stub shim.ChaincodeStubInterface, e
 
     return valAsbytes, nil
 
+}
+
+func (t *GroupPolicy) getCoverageByClass(classType string) ([]Coverage) {
+	
+	t.Coverages = make([]Coverage,6)
+	t.Coverages[0] = Coverage{ObjectType:"COV", CoverageType:"STD", CoverageLabel:"STD",SumAssured:""}
+	t.Coverages[1] = Coverage{ObjectType:"ABC", CoverageType:"LTD", CoverageLabel:"LTD",SumAssured:""}
+	t.Coverages[2] = Coverage{ObjectType:"COV", CoverageType:"LIFE", CoverageLabel:"Life",SumAssured:""}
+	t.Coverages[3] = Coverage{ObjectType:"COV", CoverageType:"ADD", CoverageLabel:"AD&D",SumAssured:""}
+	t.Coverages[4] = Coverage{ObjectType:"COV", CoverageType:"CI", CoverageLabel:"CI",SumAssured:""}
+	t.Coverages[5] = Coverage{ObjectType:"COV", CoverageType:"DENTAL", CoverageLabel:"Dental",SumAssured:""}
+	
+	if classType == "III-B" {
+		t.Coverages[0].SumAssured = "150000"
+		t.Coverages[1].SumAssured = "1800"
+		t.Coverages[2].SumAssured = "50000"
+		t.Coverages[3].SumAssured = "600000"
+		t.Coverages[4].SumAssured = "100000"
+		t.Coverages[5].SumAssured = "5000"
+	} else if classType == "III-C" {
+		t.Coverages[0].SumAssured = "250000"
+		t.Coverages[1].SumAssured = "2800"
+		t.Coverages[2].SumAssured = "80000"
+		t.Coverages[3].SumAssured = "1000000"
+		t.Coverages[4].SumAssured = "200000"
+		t.Coverages[5].SumAssured = "10000"
+	}
+	
+	return t.Coverages
 }
 
 func main() {
