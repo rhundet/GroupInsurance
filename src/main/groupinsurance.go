@@ -57,14 +57,6 @@ func (t *GroupPolicy) Init(stub shim.ChaincodeStubInterface, function string, ar
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	if err == nil {
-		return nil, nil
-	}	
-	
-	if err != nil {
-		return nil, err
-	}
-	
 	fmt.Println("Init function end")
 	
 	return nil, nil
