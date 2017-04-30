@@ -1,16 +1,33 @@
 package main
 
+
+// https://github.com/hyperledger/fabric/blob/v0.6/core/chaincode/shim/chaincode.go
+// https://hyperledger-fabric.readthedocs.io/en/v0.6/API/ChaincodeAPI.html
+
+//http://hyperledger-fabric.readthedocs.io/en/stable/API/ChaincodeAPI/#chaincode-apis
+// https://github.com/hyperledger/fabric/blob/master/core/chaincode/shim/chaincode.go
+
+/**
+Not implementing tables as I couldn't find the tables API in 1.0 or latest API so want to keep code portable to 1.0
+Can't implement queries as not present 1.0 API and I am using 0.6 on bluemix.
+Therefore keeping the key as employee or customer Id which will be same for the network
+and be accessible by all peers
+
+**/
 import (
 	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"encoding/json"
+	//"strconv"
 )
+
+const MAX_NO_OF_DEPENDENTS = 3
 
 type GroupPolicy struct {
 	ObjectType string `json:"docType"`
 	PolicyNo string `json:"policyNo"`
-	CustomerId string `json:"customerId"`
+	CustomerId string `json:"customerId"` // this will be our customerId as well as employeeId
 	Insured Insured `json:"insured"`
 	Coverages []Coverage `json:"coverages"`
 	TransactionType string `json:"transactionType"`
@@ -86,18 +103,18 @@ func (t *GroupPolicy) Query(stub shim.ChaincodeStubInterface, function string, a
 	fmt.Println("query is running " + function)
 
 	// Handle different functions
-	if function == "findPolicyByPolicyNo" {											//read a variable
-		return t.findPolicyByPolicyNo(stub, args)
-	} else if function =="findPolicyByEmployer" {
-		return t.findPolicyByEmployer(stub, args)
-	} else if function =="findPolicyByDateRange" {
-		return t.findPolicyByDateRange(stub, args)
+	if function == "findPolicyByEmployeeId" {			
+		employeeId:= args[0]	//read a variable
+		return t.findPolicyByEmployeeId(stub, employeeId)
 	} 
 	
 	fmt.Println("query did not find func: " + function)						//error
 	return nil, errors.New("Received unknown function query: " + function)
 }
 
+/**
+This will create a new customer or enroll a new customer
+*/
 func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	
 	var err error
@@ -111,14 +128,14 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	gp:= new(GroupPolicy)
 	gp.ObjectType = "GP"
 	gp.PolicyNo = args[0]
-	gp.CustomerId = args[1]
+	gp.CustomerId = args[1] // this should be employeeId as well
 	gp.TransactionType = args[2]
 	gp.TransactionLabel = args[3]
 	gp.TransactionDetails = args[4]
 
 	gp.Insured.ObjectType="INS"
 	gp.Insured.CustomerId = args[5]
-	gp.Insured.EmployeeId = args[6]
+	gp.Insured.EmployeeId = args[6] // This should be customerId
 	gp.Insured.FirstName = args[7]
 	gp.Insured.LastName = args[8]
 	gp.Insured.CertificateNo = args[9]
@@ -128,7 +145,7 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	
 	jsonAsBytes, _ := json.Marshal(gp) 
 	
-	err = stub.PutState(args[0], jsonAsBytes)
+	err = stub.PutState(gp.Insured.EmployeeId, jsonAsBytes)
 	 
 	if err != nil {
         return nil, err
@@ -158,18 +175,51 @@ func (t *GroupPolicy) updateClass(stub shim.ChaincodeStubInterface, args []strin
 }
 
 func (t *GroupPolicy) addUpdateDependent(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, value string
+	
+	var employeeId string
 	var err error
 	
 	fmt.Println("runnin write()")
-	key = args[0]
-	value = args[1]
 
-	err = stub.PutState(key, []byte(value))
-	
-	if len(args) != 2 {
+	if len(args) != 4 {
 		return nil, errors.New("Incorrect number od arguments.");
 	}
+
+	employeeId = args[0]
+	currentPolicyJson,_:= t.findPolicyByEmployeeId(stub, employeeId)
+	currentPolicy:= new(GroupPolicy);
+	json.Unmarshal(currentPolicyJson, &currentPolicy) 
+	
+	// current number of dependents
+	noOfDependents:= len(currentPolicy.Insured.Depdendents)
+	
+	// maximum 3 dependents can be added
+	if noOfDependents < 3 {
+		// add new dependents
+		newCount:= noOfDependents + 1
+		
+		//back up current dependents
+		oldDependents:= currentPolicy.Insured.Depdendents
+		currentPolicy.Insured.Depdendents = make([]Dependent,(newCount))
+		
+		// copy old dependents as it is
+		for i := 0; i < noOfDependents; i++ {
+			currentPolicy.Insured.Depdendents[i].ObjectType = oldDependents[i].ObjectType
+			currentPolicy.Insured.Depdendents[i].FirstName = oldDependents[i].FirstName
+			currentPolicy.Insured.Depdendents[i].LastName = oldDependents[i].LastName
+			currentPolicy.Insured.Depdendents[i].Relatioship = oldDependents[i].Relatioship
+		}
+		
+		// create new dependent
+		lastIndex:= noOfDependents;
+		currentPolicy.Insured.Depdendents[lastIndex].ObjectType = "DEP"
+		currentPolicy.Insured.Depdendents[lastIndex].FirstName = args[1]
+		currentPolicy.Insured.Depdendents[lastIndex].LastName = args[2]
+		currentPolicy.Insured.Depdendents[lastIndex].Relatioship = args[3]
+	}
+	
+	updatedJsonAsBytes, _ := json.Marshal(currentPolicy)
+	err = stub.PutState(employeeId, updatedJsonAsBytes)
 	
 	if err != nil {
         return nil, err
@@ -177,68 +227,14 @@ func (t *GroupPolicy) addUpdateDependent(stub shim.ChaincodeStubInterface, args 
     return nil, nil
 }
 
-func (t *GroupPolicy) findPolicyByPolicyNo(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var policyNo, jsonResp string
+func (t *GroupPolicy) findPolicyByEmployeeId(stub shim.ChaincodeStubInterface, employeeId string) ([]byte, error) {
+	var jsonResp string
 	var err error
-	if len(args) != 1 {
-        return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
-    }
-	policyNo = args[0]
-	valAsbytes, err := stub.GetState(policyNo)
+	
+	valAsbytes, err := stub.GetState(employeeId)
 	
 	if err != nil {
-        jsonResp = "{\"Error\":\"Failed to get state for " + policyNo + "\"}"
-        return nil, errors.New(jsonResp)
-    }
-
-    return valAsbytes, nil
-
-}
-
-func (t *GroupPolicy) findPolicyByEmployeeId(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, jsonResp string
-	var err error
-	if len(args) != 1 {
-        return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
-    }
-	valAsbytes, err := stub.GetState(key)
-	
-	if err != nil {
-        jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
-        return nil, errors.New(jsonResp)
-    }
-
-    return valAsbytes, nil
-
-}
-
-func (t *GroupPolicy) findPolicyByEmployer(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, jsonResp string
-	var err error
-	if len(args) != 1 {
-        return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
-    }
-	valAsbytes, err := stub.GetState(key)
-	
-	if err != nil {
-        jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
-        return nil, errors.New(jsonResp)
-    }
-
-    return valAsbytes, nil
-
-}
-
-func (t *GroupPolicy) findPolicyByDateRange(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, jsonResp string
-	var err error
-	if len(args) != 1 {
-        return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
-    }
-	valAsbytes, err := stub.GetState(key)
-	
-	if err != nil {
-        jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
+        jsonResp = "{\"Error\":\"Failed to get state for " + employeeId + "\"}"
         return nil, errors.New(jsonResp)
     }
 
