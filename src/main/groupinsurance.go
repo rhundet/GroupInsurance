@@ -104,24 +104,24 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 
 	fmt.Println("runnin write()")
 	
-	gp:= new(GroupPolicy)
-	gp.ObjectType = "GP"
-	gp.PolicyNo = args[0]
-	gp.CustomerId = args[1]
-	gp.TransactionType = args[2]
-	gp.TransactionLabel = args[3]
-	gp.TransactionDetails = args[4]
-	
-	insured:= new(Insured)
-	insured.ObjectType="INS"
-	insured.CustomerId = args[5]
-	insured.EmployeeId = args[6]
-	insured.FirstName = args[7]
-	insured.LastName = args[8]
-	insured.CertificateNo = args[9]
-	insured.Class = args[10]
-	insured.EmployerId = args[11]
-	insured.EmployerName = args[12]
+//	gp:= new(GroupPolicy)
+//	gp.ObjectType = "GP"
+//	gp.PolicyNo = args[0]
+//	gp.CustomerId = args[1]
+//	gp.TransactionType = args[2]
+//	gp.TransactionLabel = args[3]
+//	gp.TransactionDetails = args[4]
+//	
+//	insured:= new(Insured)
+//	insured.ObjectType="INS"
+//	insured.CustomerId = args[5]
+//	insured.EmployeeId = args[6]
+//	insured.FirstName = args[7]
+//	insured.LastName = args[8]
+//	insured.CertificateNo = args[9]
+//	insured.Class = args[10]
+//	insured.EmployerId = args[11]
+//	insured.EmployerName = args[12]
 	
 	//gp.Insured = insured
 
@@ -129,7 +129,7 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	
 	//fmt.Println("jsonAsBytes >> " + jsonAsBytes)
 	
-	err = stub.PutState(gp.PolicyNo, []byte(args[0]))
+	err = stub.PutState(args[0], []byte(args[0]))
 	
 	if err != nil {
         return nil, err
