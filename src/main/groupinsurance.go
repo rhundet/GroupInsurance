@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"encoding/json"
+//	"encoding/json"
 )
 
 type GroupPolicy struct {
@@ -125,7 +125,9 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	
 	//gp.Insured = insured
 
-	jsonAsBytes, _ := json.Marshal(gp) 
+	//jsonAsBytes, _ := json.Marshal(gp) 
+	
+	//fmt.Println("jsonAsBytes >> " + jsonAsBytes)
 	
 	err = stub.PutState(gp.PolicyNo, []byte(args[0]))
 	
