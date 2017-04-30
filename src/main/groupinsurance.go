@@ -176,7 +176,7 @@ func (t *GroupPolicy) enroll(stub shim.ChaincodeStubInterface, args []string) ([
 	
 	jsonAsBytes, _ := json.Marshal(gp) 
 	
-	err = stub.PutState(args[0], jsonAsBytes)
+	err = stub.PutState(gp.PolicyNo, jsonAsBytes) 
 	 
 	if err != nil {
         return nil, err
